@@ -1,0 +1,50 @@
+library(deSolve) 
+library(ggplot2)
+library(lubridate)
+library(jsonlite)
+library(tidyverse)
+library(dplyr)
+library(grid)
+library(readr)
+# build the SEIRD model
+  seird <- function(time, state, pars){ 
+    with(as.list(c(state, pars)),{ 
+      dS <- -S * beta * I/N 
+      dE <- S * beta * I/N - E * alpha 
+      dI <- E * alpha - I * gamma
+      dR <- I * (gamma - mu)
+      dD <- I * mu
+      dN <- dS + dE + dI + dR + dD 
+      return(list(c(dS,dE,dI,dR,dD,dN)))
+    })
+  } 
+  # Define the parameters
+  N <- 6.5E8 # total population
+  I0 <- 2 # initial number of infectious population
+  E0 <- 0 # initial number of exposed population
+  R0 <- 0 # initial number of recovered population
+  D0 <- 0 # initial number of death population
+  S0 = N - I0 - R0 -  D0 # initial number of susceptible population
+  init <- c(S = S0, E = E0, I = I0, R = R0, D = D0, N = N)	
+  time <- seq(0, 160, 1) 
+  pars<-c( 
+    beta = 0.55,	# infectious rate
+    alpha = 1,	# transmission rate from exposed individual to infected individual
+    gamma = 0.2,	# recovery rate 
+    mu= 0.02	# death rate
+  ) 
+  res.seird <- as.data.frame(lsoda(y = init, times = time, func = seird, parms = pars)) 
+  ggplot(res.seird) +
+    geom_line(aes(x = time, y = S, col = 'Suscepible Population'))+
+    geom_line(aes(x = time, y = E, col = 'Exposed Population'))+
+    geom_line(aes(x = time, y = I, col = 'Infectious Population'))+
+    geom_line(aes(x = time, y = R, col = 'Recovered Population'))+
+    geom_line(aes(x = time, y = D, col = 'Death Population'))+
+    scale_colour_manual("",
+                        values=c(
+                          "Suscepible Population" = "cornflowerblue", "Exposed Population" = "orange",
+                          "Infectious Population" = "forestgreen", "Recovered Population" = "darkred",
+                          "Death Population" = "black"
+                        ) 
+    ) + scale_y_continuous('')+ labs(title = "Simulate SEIRD model of covid-19 in UK")
+  
