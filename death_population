@@ -1,0 +1,29 @@
+# put into the ONS dataset of deaths
+data <- read_excel("Desktop/death_data.xlsx")
+view(data)
+
+
+cdeath <- data$`ONS Deaths involving COVID-19`# death population caused by covid_19
+total <- data$`ONS All deaths year-to-date` # total deaths of this year
+ldeath <- data$`ONS 2019` # death population of 2019 
+time <- as.Date(data$Date)
+days <- seq(0,166,1)
+# plot 
+df = data.frame(days,ldeath,cdeath,total)
+factor(ldeath)
+factor(cdeath)
+ggplot(df)+ 
+  geom_line(aes(x = days, y = total, col = '2020 Total Death Population'))+
+  geom_line(aes(x = days, y = ldeath, col='2019 Total Death Population'))+
+  geom_line(aes(x = days, y = cdeath, col='Death Population Caused by COVID-19'))+ 
+  ggtitle("Death Population Summary")+
+  labs(x = "Days", y = "Populations")+
+  scale_colour_manual("",
+                      values=c(
+                        "Death Population Caused by COVID-19" = "cornflowerblue", 
+                        "2019 Total Death Population" = "orange",
+                        "2020 Total Death Population" = "forestgreen" ) 
+  ) + scale_y_continuous('')
+  scale_color_discrete(name = "TITLE", labels = c("2020 Total Death Population",
+                                                  "2019 Total Death Population", 
+                                                  "Death Population Caused by COVID-19"))
