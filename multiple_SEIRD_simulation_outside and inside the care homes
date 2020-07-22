@@ -1,0 +1,72 @@
+# build the multip SEIRD model outside and inside the care homes residents involving covid_19 in UK 
+  multi_seird <- function(time, state, pars){ 
+  with(as.list(c(state, pars)),{ 
+  dSn <- -Sn * (betann*In + betanc*Ic)/Nn
+  dEn <- Sn * (betann*In + betanc*Ic)/Nn - En * alphan 
+  dIn <- En * alphan -  In * gamman
+  dRn <- In * (gamman - mun)
+  dDn <- In * mun
+  dNn <- dSn + dEn +dIn + dRn + dDn 
+  dSc <- -Sc * (betacn*In + betacc*Ic)/Nc
+  dEc <- Sc * (betacn*In + betacc*Ic)/Nc - Ec * alphac 
+  dIc <- Ec * alphac - Ic * gammac
+  dRc <- Ic * (gammac - muc)
+  dDc <- Ic * muc
+  dNc <- dSc + dEc + dIc + dRc + dDc
+  return(list(c(dSn,dEn,dIn,dRn,dDn,dNn,
+                dSc,dEc,dIc,dRc,dDc,dNc)))
+  })
+  } 
+  # Define the parameters
+  Nn <- 64582000 # total population outside the care homes 
+  Nc <- 418000 # total population inside the care homes of England and Wales
+  In0 <- 2 # initial number of infectious population outside the care homes
+  Ic0 <- 0 # initial number of infectious population inside care homes
+  En0 <- 0 # initial number of exposed population
+  Rn0 <- 0 # initial number of recovered population
+  Dn0 <- 0 # initial number of death population
+  Ec0 <- 0 # initial number of exposed population
+  Rc0 <- 0 # initial number of recovered population
+  Dc0 <- 0 # initial number of death population
+  Sn0 = (Nn - In0 - Rn0 -  Dn0) # initial number of susceptible population
+  Sc0 = (Nc - Ic0 - Rc0 -  Dc0) # initial number of susceptible population inside care homes
+  init <- c(Sn = Sn0, En = En0, In = In0, Rn = Rn0, Dn = Dn0, Nn = Nn,
+            Sc = Sc0, Ec = Ec0, Ic = Ic0, Rc = Rc0, Dc = Dc0, Nc = Nc)	
+  time <- seq(1, 210, 1) 
+  pars<-c( 
+    betann = 0.3,	# infection rate from Sn to In (estimate)
+    betanc = 0.4,	# infection rate from Sn to Ic (estimate)
+    betacn = 0.45,# infection rate from Sc to In (estimate)
+    betacc = 0.5,	# infection rate from Sc to Ic (estimate)
+    alphan = 1,	# transmission rate from exposed individual to infected individual outside the care homes (estimate)
+    gamman = 0.09,	# recovery rate  outside the care homes (estimate)
+    mun = 0.03,	# death rate  outside the care homes (estimate)
+    alphac = 1,	# transmission rate from exposed individual to infected individual inside care homes (estimate)
+    gammac = 0.12,	# recovery rate inside care homes (estimate)
+    muc = 0.046	# death rate inside care homes (simple calculated rate)
+  ) 
+  res_multi_seird <- as.data.frame(lsoda(y = init, times = time, func = seird_inside, parms = pars)) 
+  ggplot(res_multi_seird) +
+    geom_line(aes(x = time, y = Sn, col = 'Suscepible Population Outside'))+
+    geom_line(aes(x = time, y = En, col = 'Exposed Population Outside'))+
+    geom_line(aes(x = time, y = In, col = 'Infected Population Outside'))+
+    geom_line(aes(x = time, y = Rn, col = 'Recovered Population Outside'))+
+    geom_line(aes(x = time, y = Dn, col = 'Death Population Outside'))+
+    geom_line(aes(x = time, y = Sc, col = 'Suscepible Population inside care homes'))+
+    geom_line(aes(x = time, y = Ec, col = 'Exposed Population inside care homes'))+
+    geom_line(aes(x = time, y = Ic, col = 'Infected Population inside care homes'))+
+    geom_line(aes(x = time, y = Rc, col = 'Recovered Population inside care homes'))+
+    geom_line(aes(x = time, y = Dc, col = 'Death Population inside care homes'))+
+    scale_colour_manual("",
+                        values=c(
+                          "Suscepible Population Outside" = "cornflowerblue", "Exposed Population Outside" = "orange",
+                          "Infected Population Outside" = "forestgreen", "Recovered Population Outside" = "darkred",
+                          "Death Population Outside" = "black", "Suscepible Population inside care homes" = "red", 
+                          "Exposed Population inside care homes" = "yellow",
+                          "Infected Population inside care homes" = "blue", 
+                          "Recovered Population inside care homes" = "purple",
+                          "Death Population inside care homes" = "green"
+                        ) 
+    ) + scale_y_continuous('')+ labs(title = "Simulate multiple SEIRD model outside and inside 
+    the care homes involving covid_19 in UK")
+  
