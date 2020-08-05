@@ -10,7 +10,7 @@ tnll <- function(x){
   #theta is a vector containing the two parameters of interest
   n <- seq(1,146,1)
   logl <- -.5*n*log(2*pi) -.5*n*log(sigma^2)-
-    ((1/(2*(sigma^2)))*(sum(x - mu1))^2)
+    ((1/(2*(sigma^2)))*(sum((x - mu1)^2))
   return(-logl)
 } 
 
@@ -22,7 +22,7 @@ inll <- function(x){
   #theta is a vector containing the two parameters of interest
   n <- seq(1,167,1)
   logl <- -.5*n*log(2*pi) -.5*n*log(sigma^2)-
-    ((1/(2*(sigma^2)))*(sum(x - mu1))^2)
+    ((1/(2*(sigma^2)))*(sum((x - mu1)^2))
   return(-logl)
 } 
 iout <- inll(inddata)
