@@ -13,28 +13,9 @@ tnll <- function(x){
     ((1/(2*(sigma^2)))*(sum(x - mu1))^2)
   return(-logl)
 } 
-initial <- c(
-  logl0 = 49190
-)
+
 tout <- tnll(dailydata) # the loglikelihood values for total death
 n <- seq(1,146,1)
-t <- data.frame(n, tout)
-ggplot(t) +
-  geom_line(aes(x = n, y = logl, col = 'Loglikelihood Values for Total Death'))+
-  geom_line(aes(x = time, y = fi, col = 'Exposed Population Outside'))+
-  scale_colour_manual("",
-                      values=c(
-                        "Suscepible Population Outside" = "cornflowerblue", "Exposed Population Outside" = "orange",
-                        "Infected Population Outside" = "forestgreen", "Recovered Population Outside" = "darkred",
-                        "Death Population Outside" = "black", "Suscepible Population inside care homes" = "red", 
-                        "Exposed Population inside care homes" = "yellow",
-                        "Infected Population inside care homes" = "blue", 
-                        "Recovered Population inside care homes" = "purple",
-                        "Death Population inside care homes" = "green"
-                      ) 
-  ) + scale_y_continuous('')+ labs(title = "Simulate multiple SEIRD model outside and inside 
-    the care homes involving covid_19 in UK")
-
 
 inll <- function(x){
   mu1 = 100
