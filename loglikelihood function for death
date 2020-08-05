@@ -27,6 +27,6 @@ inll <- function(x){
 } 
 iout <- inll(inddata)
 out <- iout + tout
-out  # the sum of the
+out  # the sum of them
 # find the MLE
 max(out)
