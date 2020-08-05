@@ -15,7 +15,6 @@ tnll <- function(x){
 } 
 
 tout <- tnll(dailydata) # the loglikelihood values for total death
-n <- seq(1,146,1)
 
 inll <- function(x){
   mu1 = 100
