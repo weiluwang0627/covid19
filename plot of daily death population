@@ -1,0 +1,20 @@
+# plot of the death population
+# import the dataset
+ddata <- read_excel("Desktop/uk daily.xlsx")   # the total death population
+data <- read_excel("Desktop/0306-0612care_home_deaths.xlsx")  # the death population inside care homes
+dailydata <- ddata$`Daily change in deaths`
+inddata <- data$`Deaths involving COVID-19 of care home residents`
+date <- data$Date
+datet <- ddata$Date
+timei <- seq(1,99,1)
+inside <- data.frame(timei,date,inddata)
+totald <- data.frame(timei,date,ddata)
+model <-data.frame(date,inside,totald)
+ggplot(model,aes(date)) + 
+  geom_line(aes(x = date, y = dailydata, col = 'total daily death population'))+
+  geom_line(aes(x = date, y = inddata, col='daily death population inside care homes'))+
+  scale_colour_manual("",
+                      values=c(
+                        "daily death population inside care homes" = "forestgreen", "total daily death population" = "cornflowerblue" 
+                      ) 
+  ) + scale_y_continuous('') + labs(title = "Death Population") + scale_x_date(breaks=as.date(c("2020-03-06","2020-04-06","2020-05-06"))
