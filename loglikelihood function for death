@@ -1,32 +1,23 @@
 # import the dataset
 ddata <- read_excel("Desktop/uk daily.xlsx")   # the total death population
-data <- read_excel("Desktop/death_data.xlsx")  # the death population inside care homes
-dailydata <- ddata$`Daily change in deaths`
-inddata <- data$`daily deaths(inside care homes)`
+data <- read_excel("Desktop/0306-0612care_home_deaths.xlsx")  # the death population inside care homes
+dailydata <- ddata$`Daily change in deaths` # total
+inddata <- data$`Deaths involving COVID-19 of care home residents` # inside
 # define the normal loglikelihood function for total death
-tnll <- function(x){
+n <- seq(1,99,1)
+nll <- function(x){
   mu1 = 100  # mu1 here is an estimate parameter 
   sigma = 100
   #theta is a vector containing the two parameters of interest
-  n <- seq(1,146,1)
+  n <- seq(1,99,1)
   logl <- -.5*n*log(2*pi) -.5*n*log(sigma^2)-
     (1/(2*(sigma^2)))*(sum((x - mu1)^2))
      return(-logl)
 }
-
-tout <- tnll(dailydata) # the loglikelihood values for total death
-
-inll <- function(x){
-  mu1 = 100
-  sigma = 100
-  #theta is a vector containing the two parameters of interest
-  n <- seq(1,167,1)
-  logl <- -.5*n*log(2*pi) -.5*n*log(sigma^2)-
-    (1/(2*(sigma^2)))*(sum((x - mu1)^2))
-     return(-logl)
-} 
-iout <- inll(inddata)
-out <- iout + tout
-out  # the sum of them
+tout <- nll(dailydata) # the loglikelihood values for total death
+iout <- nll(inddata) # the loglikelihood values for inside death
+out <- iout + tout 
 # find the MLE
 max(out)
+plot(n,tout)
+plot(n,iout)
