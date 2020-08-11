@@ -1,0 +1,72 @@
+# Create a ForwardSimulation method 
+# SEIRD-with-care-home model 
+# with a given set of parameters ForwardSimulation(parameters)
+# Saperate the population into outside and inside the care home
+# import the dataset first
+inside_data <- read_excel("Desktop/uk_carehome_data.xlsx")
+# define the parameters 
+N_in <- inside_data$`Deaths involving COVID-19 England and Wales (ONS data)`
+N_total <- inside_data$`All deaths England and Wales (ONS data)`
+N_in_England <- inside_data$`Deaths involving COVID-19 England (ONS data)`
+N_total_England <- inside_data$`All deaths England (ONS data)`
+N_in_Wales <- inside_data$`Deaths involving COVID-19 Wales (ONS data)`
+N_total_Wales <- inside_data$`All deaths Wales (ONS data)`
+ni <- N_in  # the death population inside the care homes
+nt <- N_total
+nie <- N_in_England 
+nte <- N_total_England
+niw <- N_in_Wales
+ntw <- N_total_Wales 
+noe <- nte - nie # the death population outside the care homes in England
+now <- ntw - niw # the death population outside the care homes in Wales
+no <- (noe + now) # the death population outside the care homes
+
+# build the multiple SEIRD model outside and inside the care homes residents involving covid_19 in UK 
+# build the SEIRD model
+in_seird <- function(time, state, pars){ 
+  with(as.list(c(state, pars)),{ 
+    dS <- -S * beta * I/N 
+    dE <- S * beta * I/N - E * alpha 
+    dI <- E * alpha - I * gamma
+    dR <- I * (gamma - mu)
+    dD <- I * mu
+    dN <- dS + dE + dI + dR + dD 
+    return(list(c(dS,dE,dI,dR,dD,dN)))
+  })
+} 
+# Define the parameters
+Nc <- 418000 # total population inside the care homes of England and Wales
+I0 <- 2 # initial number of infected population
+E0 <- 0 # initial number of exposed population
+R0 <- 0 # initial number of recovered population
+D0 <- 0 # initial number of death population
+S0 = Nc - I0 - R0 -  D0 # initial number of susceptible population
+init <- c(S = S0, E = E0, I = I0, R = R0, D = D0, N = Nc)	
+time <- seq(1, 99, 1) 
+pars<-c( 
+  beta = 0.55,	# infection rate
+  alpha = 1,	# transmission rate from exposed individual to infected individual
+  gamma = 0.2,	# recovery rate 
+  mu= 0.06	# death rate
+) 
+inside_seird <- as.data.frame(lsoda(y = init, times = time, func = in_seird, parms = pars)) 
+simulate_death <- inside_seird$D
+# import the death dataset
+ddata <- read_excel("Desktop/uk daily.xlsx")   # the total death population
+data <- read_excel("Desktop/0306-0612care_home_deaths.xlsx")  # the death population inside care homes
+outdata <- ddata$`deaths outside the care homes`  # outside the carehomes
+inddata <- data$`Deaths involving COVID-19 of care home residents` # inside
+# loglikelihood function
+n <- seq(1,99,1)
+mu1 <- simulate_death
+nll <- function(x){
+  sigma = 20
+  #theta is a vector containing the two parameters of interest
+  n <- seq(1,99,1)
+  logl <- -.5*n*log(2*pi) -.5*n*log(sigma^2)-
+    (1/(2*(sigma^2)))*(sum((x - mu1)^2))
+  return(-logl)
+}
+oout <- nll(outdata) # the loglikelihood values for total death
+iout <- nll(inddata) # the loglikelihood values for inside death
+total_outcomes <- tout + iout
