@@ -1,0 +1,25 @@
+# define the cofficient g(t) for death rate 
+# build the model
+# Define the parameters
+go <- 34.84
+gb <- 0.21 # lockdown_baseline
+gr <- 0.15 # rate_of_lockdown
+go <- 34.84 # lockdown_offsite
+gf <- 0.00606 #lockdown_fatigue_rate
+g <- function(i){
+ #  with(as.list(c(state, parms)),{ 
+    gi <- 1 - 0.5*(1 - gb)*(tanh(gr*(i - go))+1 )+ fi
+    fi <- numeric(length(idx)) 
+    fi[i>go]<- -(1 - gb)*exp(- (i - go)*gf)+(1 - gb)
+    fi[i<go]<- 0
+    return(list(gi))
+}
+idx <- seq(1,146,1)
+gt <- as.numeric(g)
+gmodel <- data.frame(idx,g) 
+ggplot(gmodel) +
+  geom_line(aes(x = idx, y = gi, col = 'gt'))+
+  scale_colour_manual("",
+                      values=c("g(t)" = "cornflowerblue") )+ 
+                        scale_y_continuous('')+ 
+  labs(title = "cofficient g(t) of death rate mu")
