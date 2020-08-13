@@ -7,72 +7,87 @@ gb <- 0.21 # lockdown_baseline
 gr <- 0.15 # rate_of_lockdown
 go <- 34.84 # lockdown_offsite
 gf <- 0.00606 #lockdown_fatigue_rate
-idx <- seq(1,99,1)
-i <- seq(1,99,1)
-g <- function(i){
-  #  with(as.list(c(state, parms)),{ 
-  gi <- 1 - 0.5*(1 - gb)*(tanh(gr*(i - go))+1 )+ fi
-  idx <- seq(1,99,1)
-  fi <- numeric(length(idx))
-  fi[i>go]<- -(1 - gb)*exp(- (i - go)*gf)+(1 - gb)
-  fi[i<go]<- 0
-  return(list(gi))
+g <- function(p,i){
+  if (i >= go)
+  {fi <- -(1 - gb)*exp(- (i - go)*gf)+(1 - gb)}
+  else
+  {fi <- 0}
+  gi <- 1 - p*(0.5*(1 - gb)*(tanh(gr*(i - go))+1 )+ fi)
+  return(gi)
 }
-gidx <- g(idx)
-mu <- data.frame(gidx)
-mui <- numeric(mu)
-
-
-in_seird <- function(time, state, pars){ 
+multi_seird <- function(time, state, pars){ 
   with(as.list(c(state, pars)),{ 
-    dS <- -S * beta * I/N 
-    dE <- S * beta * I/N - E * alpha 
-    dI <- E * alpha - I * gamma
-    dR <- I * (gamma - mu)
-    dD <- I * mu
-    dN <- dS + dE + dI + dR + dD 
-    return(list(c(dS,dE,dI,dR,dD,dN)))
+    dSn <- -Sn * (betann*g(1,time)*In + betanc*g(0.5,time)*Ic)/Nn
+    dEn <- Sn * (betann*g(1,time)*In + betanc*g(0.5,time)*Ic)/Nn - En * alphan 
+    dIn <- En * alphan -  In * gamman
+    dRn <- In * (gamman - mun)
+    dDn <- In * mun
+    dNn <- dSn + dEn +dIn + dRn + dDn 
+    dSc <- -Sc * (betacn*g(0.5,time)*In + betacc*Ic)/Nc
+    dEc <- Sc * (betacn*g(0.5,time)*In + betacc*Ic)/Nc - Ec * alphac 
+    dIc <- Ec * alphac - Ic * gammac
+    dRc <- Ic * (gammac - muc)
+    dDc <- Ic * muc
+    dNc <- dSc + dEc + dIc + dRc + dDc
+    return(list(c(dSn,dEn,dIn,dRn,dDn,dNn,
+                  dSc,dEc,dIc,dRc,dDc,dNc)))
   })
 } 
 # Define the parameters
+theta <- c(1,1,1,0.064,0.02,1)
+Nn <- 64582000 # total population outside the care homes 
 Nc <- 418000 # total population inside the care homes of England and Wales
-I0 <- 2 # initial number of infected population
-E0 <- 0 # initial number of exposed population
-R0 <- 0 # initial number of recovered population
-D0 <- 0 # initial number of death population
-S0 = Nc - I0 - R0 -  D0 # initial number of susceptible population
-init <- c(S = S0, E = E0, I = I0, R = R0, D = D0, N = Nc)	
+In0 <- 2 # initial number of infectious population outside the care homes
+Ic0 <- 0 # initial number of infectious population inside care homes
+En0 <- 0 # initial number of exposed population
+Rn0 <- 0 # initial number of recovered population
+Dn0 <- 0 # initial number of death population
+Ec0 <- 0 # initial number of exposed population
+Rc0 <- 0 # initial number of recovered population
+Dc0 <- 0 # initial number of death population
+Sn0 = (Nn - In0 - Rn0 -  Dn0) # initial number of susceptible population
+Sc0 = (Nc - Ic0 - Rc0 -  Dc0) # initial number of susceptible population inside care homes
+init <- c(Sn = Sn0, En = En0, In = In0, Rn = Rn0, Dn = Dn0, Nn = Nn,
+          Sc = Sc0, Ec = Ec0, Ic = Ic0, Rc = Rc0, Dc = Dc0, Nc = Nc)	
+time <- seq(0, 99, 1) 
 pars<-c( 
-  beta = 0.55,	# infection rate
-  alpha = 1,	# transmission rate from exposed individual to infected individual
-  gamma = 0.2,	# recovery rate
-  go = 34.84,
-  gb = 0.21, # lockdown_baseline
-  gr = 0.15, # rate_of_lockdown
-  go = 34.84, # lockdown_offsite
-  gf = 0.00606, #lockdown_fatigue_rate
-  mu = 0.02
+  betann = theta[1],	# infection rate for Sn to In
+  betanc = theta[1],	# infection rate for Sn to Ic
+  betacn = theta[1],	# infection rate for Sc to In
+  betacc = theta[2],	# infection rate for Sc to Ic
+  alphan = 0.8 ,	# transmission rate from exposed individual to infected individual
+  gamman = 0.65,	# recovery rate 
+  mun = theta[5],	# death rate outside the care homes
+  alphac = 0.8,	# transmission rate from exposed individual to infected individual inside care homes
+  gammac = 0.65,	# recovery rate inside care homes
+  muc = theta[4]	# death rate inside care homes
 ) 
-inside_seird <- as.data.frame(lsoda(y = init, times = idx, func = in_seird, parms = pars)) 
-simulate_death <- inside_seird$D
+res_multi_seird <- as.data.frame(lsoda(y = init, times = time, func = multi_seird, parms = pars))
+
+simulate_death <- res_multi_seird$Dc
+outside_death <- res_multi_seird$Dn
 # import the dataset
-ddata <- read_excel("Desktop/uk daily.xlsx")   # the total death population
+ddata <- read_excel("Desktop/uk daily.xlsx")   # the outside death population
 data <- read_excel("Desktop/0306-0612care_home_deaths.xlsx")  # the death population inside care homes
 outdata <- ddata$`deaths outside the care homes`  # outside the carehomes
 inddata <- data$`Deaths involving COVID-19 of care home residents` # inside
 # loglikelihood function
 n <- seq(1,99,1)
-mu1 <- simulate_death 
-nll <- function(x){
-  mu1 <- simulate_death
+
+nll <- function(x,mu){
   sigma = 100
   #theta is a vector containing the two parameters of interest
   n <- seq(1,99,1)
   logl <- -.5*n*log(2*pi) -.5*n*log(sigma^2)-
-    (1/(2*(sigma^2)))*(sum((x - mu1)^2))
+    (1/(2*(sigma^2)))*(sum((x - mu)^2))
   return(-logl)
 }
-oout <- nll(outdata) # the loglikelihood values for outside death
-iout <- nll(inddata) # the loglikelihood values for inside death
-total_outcomes <- oout + iout
+daily_inside_death <- simulate_death[2:100]-simulate_death[1:99]
+daily_outside_death <- outside_death[2:100]-outside_death[1:99]
 
+mu1 <- daily_inside_death #inside
+mu2 <- daily_outside_death #outside
+
+iout <- nll(inddata,mu1) # the loglikelihood values for inside death
+oout <- nll(outdata,mu2) # the loglikelihood values for outside death
+loglikelihood <- oout + iout
