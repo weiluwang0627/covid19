@@ -1,3 +1,13 @@
+library(deSolve) 
+library(ggplot2)
+library(lubridate)
+library(jsonlite)
+library(tidyverse)
+library(dplyr)
+library(grid)
+library(readr)
+library(scales)
+
 # Create a ForwardSimulation method 
 # build the SEIRD model
 # define the cofficient g(t) for death rate 
