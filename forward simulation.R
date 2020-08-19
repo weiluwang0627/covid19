@@ -8,6 +8,9 @@ library(grid)
 library(readr)
 library(scales)
 
+# Gary added this to set the working directory to this file's location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
 # Create a ForwardSimulation method 
 # build the SEIRD model
 # define the cofficient g(t) for death rate 
@@ -77,8 +80,8 @@ res_multi_seird <- as.data.frame(lsoda(y = init, times = time, func = multi_seir
 simulate_death <- res_multi_seird$Dc
 outside_death <- res_multi_seird$Dn
 # import the dataset
-ddata <- read_excel("Desktop/uk daily.xlsx")   # the outside death population
-data <- read_excel("Desktop/0306-0612care_home_deaths.xlsx")  # the death population inside care homes
+ddata <- read_excel("uk daily.xlsx")   # the outside death population
+data <- read_excel("0306-0612care_home_deaths.xlsx")  # the death population inside care homes
 outdata <- ddata$`deaths outside the care homes`  # outside the carehomes
 inddata <- data$`Deaths involving COVID-19 of care home residents` # inside
 # loglikelihood function
