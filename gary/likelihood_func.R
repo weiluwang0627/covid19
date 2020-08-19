@@ -116,14 +116,14 @@ g <- function(p,i){
 
 multi_seird <- function(time, state, pars){ 
   with(as.list(c(state, pars)),{ 
-    dSn <- -Sn * (betann*g(1,time)*In + betanc*g(1,time)*Ic)/Nn
-    dEn <- Sn * (betann*g(1,time)*In + betanc*g(1,time)*Ic)/Nn - En * alphan 
+    dSn <- -Sn * (betann*g(1,time)*In + betanc*g(0.5,time)*Ic)/Nn
+    dEn <- Sn * (betann*g(1,time)*In + betanc*g(0.5,time)*Ic)/Nn - En * alphan 
     dIn <- En * alphan -  In * gamman
     dRn <- In * (gamman - mun)
     dDn <- In * mun
     dNn <- dSn + dEn +dIn + dRn + dDn 
-    dSc <- -Sc * (betacn*g(1,time)*In + betacc*g(1,time)*Ic)/Nc
-    dEc <- Sc * (betacn*g(1,time)*In + betacc*g(1,time)*Ic)/Nc - Ec * alphac 
+    dSc <- -Sc * (betacn*g(0.5,time)*In + betacc*Ic)/Nc
+    dEc <- Sc * (betacn*g(0.5,time)*In + betacc*Ic)/Nc - Ec * alphac 
     dIc <- Ec * alphac - Ic * gammac
     dRc <- Ic * (gammac - muc)
     dDc <- Ic * muc
