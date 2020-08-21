@@ -103,7 +103,7 @@ ForwardSimulation <- function(theta){
 go <- 34.84
 gb <- 0.21 # lockdown_baseline
 gr <- 0.15 # rate_of_lockdown
-go <- 34.84 # lockdown_offsite
+go <- 34.84 # lockdown_offset
 gf <- 0.00606 #lockdown_fatigue_rate
 g <- function(p,i){
   if (i >= go)
@@ -122,8 +122,8 @@ multi_seird <- function(time, state, pars){
     dRn <- In * (gamman - mun)
     dDn <- In * mun
     dNn <- dSn + dEn +dIn + dRn + dDn 
-    dSc <- -Sc * (betacn*g(0.5,time)*In + betacc*Ic)/Nc
-    dEc <- Sc * (betacn*g(0.5,time)*In + betacc*Ic)/Nc - Ec * alphac 
+    dSc <- -Sc * (betacn*g(0.5,time)*In + betacc*g(0.5,time)*Ic)/Nc
+    dEc <- Sc * (betacn*g(0.5,time)*In + betacc*g(0.5,time)*Ic)/Nc - Ec * alphac 
     dIc <- Ec * alphac - Ic * gammac
     dRc <- Ic * (gammac - muc)
     dDc <- Ic * muc
