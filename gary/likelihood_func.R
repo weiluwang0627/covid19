@@ -134,23 +134,26 @@ multi_seird <- function(time, state, pars){
 } 
 
 plot_results = function(res_multi_seird, inddata, outdata){
-simulate_death <- res_multi_seird$Dc
-outside_death <- res_multi_seird$Dn
-daily_inside_death <- simulate_death[2:100]-simulate_death[1:99]
-daily_outside_death <- outside_death[2:100]-outside_death[1:99]
-
-days <- 1:99
-
-plot(days,inddata)
-lines(days,daily_inside_death)
-
-plot(days,outdata)
-lines(days,daily_outside_death)
-
-google <- vector()
-for (i in days)
-{
-    google <- append(google,g(1,i))
-}
-plot(days, google)
+  simulate_death <- res_multi_seird$Dc
+  outside_death <- res_multi_seird$Dn
+  daily_inside_death <- simulate_death[2:100]-simulate_death[1:99]
+  daily_outside_death <- outside_death[2:100]-outside_death[1:99]
+  
+  days <- 1:99
+  
+  par(mfg=c(1,1))
+  plot(days,inddata)
+  lines(days,daily_inside_death)
+  
+  par(mfg=c(2,1))
+  plot(days,outdata)
+  lines(days,daily_outside_death)
+  
+  par(mfg=c(3,1))
+  google <- vector()
+  for (i in days)
+  {
+      google <- append(google,g(1,i))
+  }
+  plot(days, google)
 }
