@@ -6,7 +6,7 @@ source('likelihood_func.R')
 require('adaptMCMC')
 
 # Result of an optimization run
-theta <- c(0.5022554, 0.5236479, 20.3501919,  0.2732997,  0.4517723)
+theta <- c(4170, 1.1, 0.0026, 0.045 , 1.4, 0.026, 197, 45)
 
 num_samples <- 200000
 result <- MCMC(p = LogLikelihood, init = theta, scale = 0.01*theta, n=num_samples, adapt=TRUE, acc.rate=0.2, inddata = inddata, outdata = outdata)
